@@ -1,101 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>EduLearn - Your Online Education Partner</title>
-		<link rel="stylesheet" href="style.min.css" />
-		<link rel="icon" href="icon.png" />
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<title>ubg</title>
+		<style>
+			body {
+				font-family: sans-serif
+			}
+
+			ul {
+				white-space: pre
+			}
+
+			.hidden {
+				display: none
+			}
+		</style>
 	</head>
 	<body>
-		<div id="main">
-			<!-- Header Section -->
-			<header>
-				<div class="container">
-					<h1>EduLearn</h1>
-					<nav>
-						<ul>
-							<li><a href="#features">Features</a></li>
-							<li><a href="#courses">Courses</a></li>
-							<li><a href="#testimonials">Testimonials</a></li>
-							<li><a href="#footer">Contact</a></li>
-						</ul>
-					</nav>
-				</div>
-			</header>
+		<span>Search</span><br>
+		<input id="query" autocomplete="off"><br>
+		<ul></ul>
+		<script>
+			(async function() {
+				let currentLength = 0;
+				let limit = 50;
+				let json;
+				let forceAdd = false;
+				const list = document.querySelector("ul");
+				const search = document.querySelector("#query");
+				try {
+					const response = await fetch("g.json");
+					json = await response.json();
+					document.title = "ubg" + json.v;
+				} catch (error) {
+					console.error("Error fetching data:", error);
+					list.textContent = "Error fetching data:\n" + error.stack;
+					json = null;
+				}
 
-			<!-- Hero Section -->
-			<section class="hero">
-				<div class="content">
-					<h2>Empower Your Future with Quality Online Education</h2>
-					<p>Join thousands of learners worldwide and expand your skills with our expert-led courses.</p>
-					<a href="#courses" class="btn">Explore Courses</a>
-				</div>
-			</section>
+				function addItems(offset) {
+					if (!json || currentLength >= json.g.length) return;
 
-			<!-- Features Section -->
-			<section class="features container" id="features">
-				<h3>Why Choose EduLearn?</h3>
-				<div class="feature-list">
-					<div class="feature-item">
-						<div class="feature-icon">🎓</div>
-						<h4 class="feature-title">Expert Instructors</h4>
-						<p class="feature-desc">Learn from industry professionals and certified educators.</p>
-					</div>
-					<div class="feature-item">
-						<div class="feature-icon">💻</div>
-						<h4 class="feature-title">Flexible Learning</h4>
-						<p class="feature-desc">Access courses anytime, anywhere on any device.</p>
-					</div>
-					<div class="feature-item">
-						<div class="feature-icon">📜</div>
-						<h4 class="feature-title">Certification</h4>
-						<p class="feature-desc">Earn verified certificates to showcase your achievements.</p>
-					</div>
-				</div>
-			</section>
+					const itemsToAdd = json.g.slice(offset, forceAdd ? json.length : (offset + limit));
+					itemsToAdd.forEach(item => {
+						list.innerHTML += `<li><a href=${item}/>${item}</a></li>`;
+						currentLength++;
+					});
+				}
 
-			<!-- Courses Section -->
-			<section class="courses container" id="courses">
-				<h3>Featured Courses</h3>
-				<div id="course-list">
-				</div>
-			</section>
+				function checkScroll() {
+					if (forceAdd) return;
+					const isBottom = list.getBoundingClientRect().bottom < window.innerHeight * 1.1 + 500;
+					if (isBottom) {
+						addItems(currentLength);
+					}
+				}
 
-			<!-- Testimonials Section -->
-			<section class="testimonials container" id="testimonials">
-				<h3>What Our Students Say</h3>
-				<div class="testimonial-list">
-					<div class="testimonial-item">
-						<p class="testimonial-text">
-							EduLearn's courses provided me the skills needed to land my dream job. The instructors are knowledgeable and supportive.
-						</p>
-						<div class="testimonial-author">- Mia Johnson</div>
-					</div>
+				function onInput() {
+					listAll = list.querySelectorAll("li");
+					forceAdd = true;
+					addItems(currentLength);
+					listAll.forEach(i => {
+						const text = i.textContent.toLowerCase(),
+							match = new RegExp("(?:^|\\s)" + search.value.toLowerCase().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "i").test(text.toLowerCase());
+						match ? i.classList.remove("hidden") : i.classList.add("hidden");
+					});
+				}
 
-					<div class="testimonial-item">
-						<p class="testimonial-text">
-							I loved the flexibility of learning at my own pace. The certification really helped boost my resume.
-						</p>
-						<div class="testimonial-author">- Daniel Lee</div>
-					</div>
+				search.addEventListener("input", onInput);
 
-					<div class="testimonial-item">
-						<p class="testimonial-text">
-							The platform is intuitive and the course content is engaging and up-to-date with industry trends.
-						</p>
-						<div class="testimonial-author">- Sophia Martinez</div>
-					</div>
-				</div>
-			</section>
-
-			<!-- Footer Section -->
-			<footer id="footer">
-				<p>© 2025 EduLearn. All rights reserved.</p>
-				<p>Contact us: <a href="mailto:info@edulearn.com">info@edulearn.com</a> | +1 (628) 492-2276</p>
-			</footer>
-		</div>
-		<div id="signin-popup" style="display: none;">Sign In to Enroll!</div>
-		<script src="script.mo.js"></script>
+				setInterval(checkScroll, 100);
+			})();
+		</script>
 	</body>
 </html>
