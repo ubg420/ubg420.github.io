@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<title>ubg</title>
+		<style>
+			body {
+				font-family: sans-serif
+			}
+
+			ul {
+				white-space: pre
+			}
+
+			.hidden {
+				display: none
+			}
+		</style>
+	</head>
+	<body>
+		<input id="query" autocomplete="off" placeholder="Search..."><br>
+		<ul></ul>
+		<script>
+			(async function() {
+				let currentLength = 0;
+				let limit = 50;
+				let json;
+				let forceAdd = false;
+				const list = document.querySelector("ul");
+				const search = document.querySelector("#query");
+				try {
+					const response = await fetch("g.json");
+					json = await response.json();
+					document.title = "ubg" + json.v;
+				} catch (error) {
+					console.error("Error fetching data:", error);
+					list.textContent = "Error fetching data:\n" + error.stack;
+					json = null;
+				}
+
+				function addItems(offset) {
+					if (!json || currentLength >= json.g.length) return;
+
+					const itemsToAdd = json.g.slice(offset, forceAdd ? json.length : (offset + limit));
+					itemsToAdd.forEach(item => {
+						list.innerHTML += `<li><a href=${item}/>${item}</a></li>`;
+						currentLength++;
+					});
+				}
+
+				function checkScroll() {
+					if (forceAdd) return;
+					const isBottom = list.getBoundingClientRect().bottom < window.innerHeight * 1.1 + 500;
+					if (isBottom) {
+						addItems(currentLength);
+					}
+				}
+
+				function onInput() {
+					listAll = list.querySelectorAll("li");
+					forceAdd = true;
+					addItems(currentLength);
+					listAll.forEach(i => {
+						const text = i.textContent.toLowerCase(),
+							match = new RegExp("(?:^|\\s)" + search.value.toLowerCase().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "i").test(text.toLowerCase());
+						match ? i.classList.remove("hidden") : i.classList.add("hidden");
+					});
+				}
+
+				search.addEventListener("input", onInput);
+
+				setInterval(checkScroll, 100);
+			})();
+		</script>
+	</body>
+</html>
